@@ -18,6 +18,7 @@ from .dynamic_fault import (
 )
 from .mna import stamp_short_circuit, stamp_source
 from .model import Branch, Bus, Network, Shunt, Source, Transformer
+from .load_flow import LoadFlowConvergenceError, LoadFlowResult, solve_load_flow
 from .short_circuit import ShortCircuitResult, solve_short_circuit
 from .sequence import SequenceFaultResult, solve_sequence_fault
 from .sequence_network import SequenceThevenin, calculate_sequence_thevenin, solve_network_fault
@@ -58,6 +59,8 @@ __all__ = [
     "RotorTrajectorySample",
     "RotorVoltageCorrections",
     "Network",
+    "LoadFlowConvergenceError",
+    "LoadFlowResult",
     "ShortCircuitResult",
     "SingularSystemError",
     "Source",
@@ -82,6 +85,7 @@ __all__ = [
     "make_dynamic_fault_positive_sequence_current_solver",
     "sequence_to_phase_currents",
     "solve_short_circuit",
+    "solve_load_flow",
     "solve_sequence_fault",
     "solve_synchronous_machine_parameters",
     "advance_rotor_state_trapezoidal",

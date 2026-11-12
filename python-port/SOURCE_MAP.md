@@ -20,6 +20,17 @@ This map was prepared by inspecting the uploaded `elpleksource.zip` and the orig
 - `GenProc.pas`: synchronous-machine parameter and equation helpers; imports `Shortcir`, so it is not yet a clean standalone numerical library.
 - `Elplex.pas`, `Matmul.pas`, `Cmatmul.pas`, `Utildef.pas`, `Imagodef.pas`, `Compdef.pas`: shared types, complex/matrix utilities, component definitions and global application data. These dependencies need tracing before translating algorithms.
 
+## Current Python load-flow path
+
+`src/elplek/load_flow.py` implements a balanced positive-sequence Newton-Raphson
+calculation over `build_ybus()`. It accepts net per-unit complex power
+injections for PQ buses, fixes one slack bus voltage, and calculates the slack
+power from the resulting voltages. Its Jacobian is the conventional polar-form
+P/Q Jacobian. The current model does not include PV buses, reactive limits,
+generator voltage controls, or load-flow conversion of constant-power loads
+for short-circuit calculations. The focused unit tests are in
+`tests/test_load_flow.py`.
+
 ## Dynamic synchronous-generator path
 
 The single-machine time-domain EarthShort path is now matched against every
@@ -92,18 +103,27 @@ loads remain out of scope. The
 exported `I1`/`3I2` columns are not treated as symmetrical components because
 they do not reconstruct from Elplek's exported phase currents.
 
-## Recommended migration order
+## Next development stages
 
-1. **Keep this scaffold separate from the Delphi program.** Do not overwrite or rename original files.
-2. **Inventory core types and units:** identify complex-number representation, matrix indexing, node numbering, component kinds, sign conventions, units and global state in `Utildef`, `Imagodef`, `Compdef`, `Elplex`, `Matmul` and `Cmatmul`.
-3. **Build reference fixtures:** small networks with known values and matching outputs from the original executable. Record voltages, currents, fault type, source parameters and calculation mode.
-4. **Port a narrow calculation path:** start with the smallest independent matrix/impedance routine, then expand toward load flow and IEC 60909.
-5. **Implement SLD import only after documenting the binary/text format** and making sample files available as tests.
-6. **Rebuild the GUI last** with a separate diagram model and PySide6/Qt Graphics View or another graph-editor framework.
+1. Extend load flow with PV buses, voltage control, and generator reactive limits,
+   first using analytically solved fixtures and then Elplek reference cases.
+2. Couple a converged prefault load-flow state to the dynamic fault model,
+   especially for constant-power loads and multiple generators.
+3. Continue the IEC 60909 path against matching Elplek calculations, keeping its
+   correction factors and initial-condition conventions explicit.
+4. Add SLD import only after documenting its format and testing it against the
+   saved sample files.
+5. Rebuild the GUI after the numerical models and file format are stable.
 
 ## Important engineering distinction
 
-The current `solver.py` is only a linear Y-bus voltage solver with one fixed slack voltage and constant-admittance shunts. It is **not** a Newton-Raphson load-flow solver and does not model constant-power loads, generator limits, transformer tap control, sequence networks, IEC 60909 corrections or protection relays. Its tests have been added but have not been executed in this environment. Numerical equivalence must be established against reference cases before use.
+The Newton-Raphson load-flow implementation currently supports only a fixed
+slack bus and PQ buses with specified net injections. It does not support PV
+bus controls or generator reactive limits. The wider package remains an
+incremental port and is not a certified replacement for Elplek or a validated
+engineering study package. The test suite is run locally and in GitHub Actions;
+feature-specific comparisons against the original program are documented with
+their reference cases.
 
 ## License and attribution
 

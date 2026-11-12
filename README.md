@@ -90,6 +90,17 @@ separate, simplified symmetrical-component fault path. Neither API is yet a
 certified implementation of IEC 60909.
 
 
+### Newton-Raphson load flow
+
+`solve_load_flow(network, slack_bus_id=..., specified_power_injections=...)`
+solves a balanced positive-sequence AC load flow with one fixed-voltage slack
+bus and PQ buses. Specify net complex power injections in per unit; loads use
+negative real and reactive power. The slack-bus power is calculated from the
+solved network. PV buses, generator reactive limits, and controls are not
+implemented yet. This solver does not convert constant-power loads into
+impedances for short-circuit calculations.
+
+
 ### Nominal-pi line model
 
 A `Branch` can include its total positive-sequence line charging admittance
