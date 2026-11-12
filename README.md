@@ -9,16 +9,6 @@ Read the preserved original description of the program in the Wiki: https://gith
 
 
 
-Сохраненная копия бесплатной программы Elplek версии 0.995 для расчета токов короткого замыкания и перетоков мощности.
-
-Это не официальный репозиторий программы и этот аккаунт никак не связан с её оригинальными авторами. Цель репозитория - сохранить уникальную  бесплатную программу для скачивания и возможного дальнейшего развития, т.к. исходный код программы был опубликован автором на официальном сайте, после того как развитие проекта прекратилось. Если Вы используете любые части исходного кода Elplek, пожалуйста, указывайте её автора: Ilkka Leikkonen, Kokkola, Finland.
-
-Программа написана на Delphi 2 и с минимальными изменениями может быть скомпилирована в Delphi 3й версии. Если у Вас есть идеи как усовершенствовать исходный код для компиляции в Lazarus или в Delphi более свежих версии, пишите Ваши предложения.
-
-Перевод оригинального описания программы можно прочесть здесь: https://github.com/Sibiriak/Elplek/wiki/%D0%9E%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5-%D0%BF%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D1%8B-%D0%BD%D0%B0-%D1%80%D1%83%D1%81%D1%81%D0%BA%D0%BE%D0%BC
-
-
-
 ## Incremental Python port (`python-port`)
 
 The Python implementation is an incremental port and is not yet a drop-in
@@ -128,3 +118,41 @@ If positive-sequence line charging is nonzero, explicitly provide
 `zero_sequence_shunt_admittance` before constructing the zero-sequence
 matrix. Branch impedance and admittance values must use consistent units or
 the same per-unit base as the rest of the network.
+
+### Synchronous-machine parameter conversion
+
+`solve_synchronous_machine_parameters` converts d- and q-axis reactances and
+short-circuit time constants into the four rotor-winding inductance sets used
+by the Elplek dynamic model. It follows Elplek’s `SolveGenPar` resistance and
+mutual-inductance assumptions. This module provides a four-winding rotor-state
+trapezoidal step, a one-machine Newton-coupled network step, and a generic
+multi-step driver. `make_dynamic_fault_current_solver` adapts a
+single-source sequence network to that hook: it solves the fault using all
+three sequences and returns the source positive-sequence current in D/Q
+coordinates. `initialize_rotor_state` ports Elplek's initial rotor-current
+calculation when the initial D/Q voltage corrections are known. Solving those
+corrections for a single machine is available with
+`solve_initial_rotor_voltage_corrections`, together with
+`make_dynamic_fault_positive_sequence_current_solver`. The prefault machine
+current must use the same positive-sequence convention, matching Elplek
+`ConstrVeq`; phase-A current is used separately for CT comparisons.
+`initialize_dynamic_fault_rotor_state` combines these steps and derives the
+prefault current from explicit network admittances when it is not provided;
+this does not replace a power-flow solution for constant-power loads.
+`simulate_coupled_rotor_steps` advances a supplied initial state over
+nonuniform time intervals. The single-machine dynamic fault path is compared
+with all 28 exported CT1 samples for `Ia`, `Ib`, `Ic`, and `Isum` in the
+baseline, T1 R/X doubled, Z1 R/X doubled, and Z1 resistance-only earth faults,
+the three phase-current channels for an A-B line-to-line fault, and all phase
+and residual channels for an A-B-to-earth fault, plus three phase-current
+channels for a three-phase fault, by
+`python-port/reference-cases/compare_earth_fault_dynamic.py`. EarthShort
+errors stay below 2.0 A and 0.24 degrees at CT1; the line-to-line case stays
+below 1.30 A and 0.27 degrees, and the line-to-line-to-earth case below 3.32 A and
+0.33 degrees; the three-phase case stays below 1.69 A and 0.33 degrees. The
+same cases are compared at CT7 after applying T1's 11:1 current ratio; the
+largest CT7 error is below 34.5 A and 0.33 degrees. The
+exported `I1` and
+`3I2` columns are not used because they do not equal the symmetrical components
+reconstructed from the exported phase currents. Multiple-machine coupling
+remains in development.

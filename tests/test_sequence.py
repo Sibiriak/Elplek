@@ -54,6 +54,34 @@ def test_double_line_to_ground_sequence_currents_satisfy_kcl_relation():
     np.testing.assert_allclose(result.positive_current + result.negative_current + result.zero_current, 0j, atol=1e-12)
 
 
+@pytest.mark.parametrize(
+    ("fault_type", "faulted_phases", "unfaulted_phase"),
+    (
+        ("double_line_to_ground_ab", (0, 1), 2),
+        ("double_line_to_ground_bc", (1, 2), 0),
+        ("double_line_to_ground_ca", (2, 0), 1),
+    ),
+)
+def test_double_line_to_ground_orientation_sets_requested_phase_pair(
+    fault_type, faulted_phases, unfaulted_phase
+):
+    result = solve_sequence_fault(
+        fault_type,
+        phase_voltage=120,
+        z1=0.2 + 0.3j,
+        z2=0.25 + 0.35j,
+        z0=0.4 + 0.5j,
+    )
+
+    np.testing.assert_allclose(result.phase_currents[unfaulted_phase], 0j, atol=1e-12)
+    for phase_index in faulted_phases:
+        np.testing.assert_allclose(result.phase_voltages[phase_index], 0j, atol=1e-10)
+    np.testing.assert_allclose(
+        result.fault_current,
+        3 * result.zero_current,
+    )
+
+
 def test_unknown_fault_type_rejected():
     with pytest.raises(ValueError, match="Unsupported fault type"):
         solve_sequence_fault(
@@ -80,6 +108,35 @@ def test_fault_result_includes_phase_currents_for_line_to_line():
     np.testing.assert_allclose(ia, 0j, atol=1e-12)
     np.testing.assert_allclose(ib, result.fault_current)
     np.testing.assert_allclose(ib + ic, 0j, atol=1e-12)
+
+
+@pytest.mark.parametrize(
+    ("fault_type", "faulted_phase", "unfaulted_phase"),
+    (
+        ("line_to_line_ab", 0, 2),
+        ("line_to_line_bc", 1, 0),
+        ("line_to_line_ca", 2, 1),
+    ),
+)
+def test_line_to_line_fault_orientation_sets_requested_phase_pair(
+    fault_type, faulted_phase, unfaulted_phase
+):
+    result = solve_sequence_fault(
+        fault_type,
+        phase_voltage=120,
+        z1=1 + 0.2j,
+        z2=2 + 0.3j,
+    )
+    phases = tuple(result.phase_currents)
+    other_faulted_phase = next(
+        index for index in range(3) if index not in (faulted_phase, unfaulted_phase)
+    )
+
+    np.testing.assert_allclose(phases[unfaulted_phase], 0j, atol=1e-12)
+    np.testing.assert_allclose(
+        phases[faulted_phase] + phases[other_faulted_phase], 0j, atol=1e-12
+    )
+    np.testing.assert_allclose(result.fault_current, phases[faulted_phase])
 
 
 def test_three_phase_fault_result_has_balanced_phase_currents():
