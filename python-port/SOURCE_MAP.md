@@ -24,11 +24,12 @@ This map was prepared by inspecting the uploaded `elpleksource.zip` and the orig
 
 `src/elplek/load_flow.py` implements a balanced positive-sequence Newton-Raphson
 calculation over `build_ybus()`. It accepts net per-unit complex power
-injections for PQ buses, fixes one slack bus voltage, and calculates the slack
-power from the resulting voltages. Its Jacobian is the conventional polar-form
-P/Q Jacobian. The current model does not include PV buses, reactive limits,
-generator voltage controls, or load-flow conversion of constant-power loads
-for short-circuit calculations. The focused unit tests are in
+injections for PQ buses, accepts active power and a fixed voltage magnitude for
+PV buses, fixes one slack bus voltage, and calculates slack power and PV
+reactive injections from the resulting voltages. Its Jacobian is the
+conventional polar-form P/Q Jacobian. The current model does not include
+reactive limits, generator voltage controls, or load-flow conversion of
+constant-power loads for short-circuit calculations. Focused unit tests are in
 `tests/test_load_flow.py`.
 
 ## Dynamic synchronous-generator path
@@ -105,7 +106,7 @@ they do not reconstruct from Elplek's exported phase currents.
 
 ## Next development stages
 
-1. Extend load flow with PV buses, voltage control, and generator reactive limits,
+1. Extend load flow with generator reactive limits and bus voltage controls,
    first using analytically solved fixtures and then Elplek reference cases.
 2. Couple a converged prefault load-flow state to the dynamic fault model,
    especially for constant-power loads and multiple generators.
@@ -117,9 +118,9 @@ they do not reconstruct from Elplek's exported phase currents.
 
 ## Important engineering distinction
 
-The Newton-Raphson load-flow implementation currently supports only a fixed
-slack bus and PQ buses with specified net injections. It does not support PV
-bus controls or generator reactive limits. The wider package remains an
+The Newton-Raphson load-flow implementation supports a fixed slack bus, PQ
+buses, and PV buses with fixed voltage magnitude and specified active power. It
+does not support generator reactive limits or bus controls. The wider package remains an
 incremental port and is not a certified replacement for Elplek or a validated
 engineering study package. The test suite is run locally and in GitHub Actions;
 feature-specific comparisons against the original program are documented with

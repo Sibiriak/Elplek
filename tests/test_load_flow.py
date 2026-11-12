@@ -55,6 +55,38 @@ def test_load_flow_accepts_nonconsecutive_bus_ids_and_initial_guess():
     assert result.maximum_mismatch <= 1e-10
 
 
+def test_load_flow_holds_pv_voltage_and_solves_reactive_injection():
+    result = solve_load_flow(
+        _two_bus_network(),
+        slack_bus_id=10,
+        specified_power_injections={20: 0.5 + 0j},
+        pv_bus_voltage_magnitudes={20: 1.02},
+    )
+
+    assert result.maximum_mismatch <= 1e-10
+    np.testing.assert_allclose(abs(result.bus_voltages[20]), 1.02, atol=1e-12)
+    np.testing.assert_allclose(result.bus_power_injections[20].real, 0.5, atol=1e-10)
+    assert result.bus_power_injections[20].imag > 0
+
+
+def test_load_flow_supports_pv_and_pq_buses_in_same_network():
+    network = _two_bus_network()
+    network.add_bus(Bus(35, "PQ"))
+    network.add_branch(Branch(20, 35, 0.02, 0.15))
+
+    result = solve_load_flow(
+        network,
+        slack_bus_id=10,
+        specified_power_injections={20: 0.3 + 0j, 35: -0.4 - 0.15j},
+        pv_bus_voltage_magnitudes={20: 1.02},
+    )
+
+    assert result.maximum_mismatch <= 1e-10
+    np.testing.assert_allclose(abs(result.bus_voltages[20]), 1.02, atol=1e-12)
+    np.testing.assert_allclose(result.bus_power_injections[20].real, 0.3, atol=1e-10)
+    np.testing.assert_allclose(result.bus_power_injections[35], -0.4 - 0.15j, atol=1e-10)
+
+
 def test_load_flow_rejects_unknown_slack_or_injection_buses():
     network = _two_bus_network()
     with pytest.raises(ValueError, match="Unknown slack"):
@@ -66,6 +98,21 @@ def test_load_flow_rejects_unknown_slack_or_injection_buses():
 def test_load_flow_rejects_slack_power_specification():
     with pytest.raises(ValueError, match="Slack-bus power"):
         solve_load_flow(_two_bus_network(), slack_bus_id=10, specified_power_injections={10: 1 + 0j})
+
+
+def test_load_flow_validates_pv_bus_data():
+    network = _two_bus_network()
+    with pytest.raises(ValueError, match="unknown bus"):
+        solve_load_flow(network, slack_bus_id=10, pv_bus_voltage_magnitudes={99: 1.0})
+    with pytest.raises(ValueError, match="requires a specified active-power"):
+        solve_load_flow(network, slack_bus_id=10, pv_bus_voltage_magnitudes={20: 1.0})
+    with pytest.raises(ValueError, match="specify only active power"):
+        solve_load_flow(
+            network,
+            slack_bus_id=10,
+            specified_power_injections={20: 0.1 + 0.1j},
+            pv_bus_voltage_magnitudes={20: 1.0},
+        )
 
 
 def test_load_flow_reports_nonconvergence():

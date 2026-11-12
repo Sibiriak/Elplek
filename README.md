@@ -94,9 +94,10 @@ certified implementation of IEC 60909.
 
 `solve_load_flow(network, slack_bus_id=..., specified_power_injections=...)`
 solves a balanced positive-sequence AC load flow with one fixed-voltage slack
-bus and PQ buses. Specify net complex power injections in per unit; loads use
-negative real and reactive power. The slack-bus power is calculated from the
-solved network. PV buses, generator reactive limits, and controls are not
+bus, PQ buses, and PV buses with specified active power and voltage magnitude.
+Specify net complex power injections in per unit; loads use negative real and
+reactive power. The slack-bus power and PV reactive injections are calculated
+from the solved network. Generator reactive limits and controls are not
 implemented yet. This solver does not convert constant-power loads into
 impedances for short-circuit calculations.
 

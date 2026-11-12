@@ -11,10 +11,10 @@ validated for certified engineering use.
 - Linear network and conventional short-circuit solvers.
 - Symmetrical-component sequence networks and several asymmetrical fault
   types.
-- A balanced Newton-Raphson load flow with one fixed-voltage slack bus and PQ
-  buses. Net bus power injections use per-unit values; loads are negative
-  injections. PV buses and generator voltage/reactive-power controls are not
-  implemented.
+- A balanced Newton-Raphson load flow with one fixed-voltage slack bus, PQ
+  buses, and PV buses with specified active power and voltage magnitude. Net
+  bus power injections use per-unit values; loads are negative injections.
+  Generator reactive limits and voltage controls are not implemented.
 - A single-machine dynamic fault path and synchronous-machine parameter
   conversion, checked against saved Elplek reference exports.
 
@@ -33,7 +33,7 @@ comparators and saved Elplek `.sld`/text exports are under
 
 ## Limitations
 
-This port does not yet implement PV-bus controls, generator reactive limits,
+This port does not yet implement generator reactive limits,
 constant-power load coupling to short-circuit calculations, complete IEC
 60909 corrections, multiple-machine dynamic coupling, asynchronous motors,
 protection relays, or the original graphical interface. The transformer
