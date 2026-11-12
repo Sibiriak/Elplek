@@ -38,6 +38,7 @@ def solve_load_flow(
     slack_voltage: complex = 1 + 0j,
     specified_power_injections: Mapping[int, complex] | None = None,
     pv_bus_voltage_magnitudes: Mapping[int, float] | None = None,
+    pv_bus_reactive_limits: Mapping[int, tuple[float, float]] | None = None,
     initial_voltages: Mapping[int, complex] | None = None,
     tolerance: float = 1e-10,
     max_iterations: int = 50,
@@ -48,9 +49,12 @@ def solve_load_flow(
     per unit. Omitted PQ buses have zero specified injection. A PV bus uses the
     real part of its specified injection and its voltage magnitude from
     ``pv_bus_voltage_magnitudes``; its reactive injection is solved. The
+    optional ``pv_bus_reactive_limits`` maps PV bus IDs to net per-unit
+    ``(Q_min, Q_max)`` limits. If the solved reactive injection exceeds a limit,
+    that bus is converted to PQ at the violated limit. The
     slack-bus power is solved from the network equations. Generator reactive
-    limits, controls, and constant-impedance load conversion are not part of
-    this API.
+    voltage controls beyond fixed PV setpoints and constant-impedance load
+    conversion are not part of this API.
     """
     if not network.buses:
         raise ValueError("Load flow requires at least one bus")
@@ -69,6 +73,7 @@ def solve_load_flow(
     slack = index[slack_bus_id]
     specified_power_injections = specified_power_injections or {}
     pv_bus_voltage_magnitudes = pv_bus_voltage_magnitudes or {}
+    pv_bus_reactive_limits = pv_bus_reactive_limits or {}
     for bus_id, power in specified_power_injections.items():
         if bus_id not in index:
             raise ValueError(f"Power injection references unknown bus id: {bus_id}")
@@ -87,6 +92,15 @@ def solve_load_flow(
             raise ValueError("PV bus voltage magnitudes must be finite and positive")
         if abs(complex(specified_power_injections[bus_id]).imag) > tolerance:
             raise ValueError("PV-bus reactive power is solved; specify only active power")
+    for bus_id, limits in pv_bus_reactive_limits.items():
+        if bus_id not in pv_bus_voltage_magnitudes:
+            raise ValueError(f"Reactive limits require PV bus {bus_id}")
+        if (
+            len(limits) != 2
+            or not all(isfinite(limit) for limit in limits)
+            or limits[0] > limits[1]
+        ):
+            raise ValueError("PV reactive limits must be finite (Q_min, Q_max) pairs")
     pv = np.array([index[bus_id] for bus_id in pv_bus_voltage_magnitudes], dtype=int)
     if slack in pv:
         raise ValueError("Slack bus cannot also be a PV bus")
@@ -101,7 +115,7 @@ def solve_load_flow(
     ybus = build_ybus(network)
     n_bus = len(network.buses)
     non_slack = np.array([i for i in range(n_bus) if i != slack], dtype=int)
-    pq = np.array([i for i in non_slack if i not in set(pv)], dtype=int)
+    pv_targets = dict(pv_bus_voltage_magnitudes)
     specified = np.zeros(n_bus, dtype=np.complex128)
     for bus_id, power in specified_power_injections.items():
         specified[index[bus_id]] = complex(power)
@@ -109,7 +123,7 @@ def solve_load_flow(
     voltage = np.ones(n_bus, dtype=np.complex128)
     for bus_id, value in (initial_voltages or {}).items():
         voltage[index[bus_id]] = complex(value)
-    for bus_id, magnitude in pv_bus_voltage_magnitudes.items():
+    for bus_id, magnitude in pv_targets.items():
         pv_index = index[bus_id]
         angle = np.angle(voltage[pv_index])
         voltage[pv_index] = magnitude * np.exp(1j * angle)
@@ -121,12 +135,31 @@ def solve_load_flow(
 
     g, b = ybus.real, ybus.imag
     for iteration in range(max_iterations + 1):
+        pv_set = set(pv)
+        pq = np.array([i for i in non_slack if i not in pv_set], dtype=int)
         injection = voltage * np.conjugate(ybus @ voltage)
         mismatch_p = specified.real[non_slack] - injection.real[non_slack]
         mismatch_q = specified.imag[pq] - injection.imag[pq]
         mismatch = np.concatenate((mismatch_p, mismatch_q))
         maximum_mismatch = float(np.max(np.abs(mismatch)))
         if maximum_mismatch <= tolerance:
+            limit_violations = []
+            for bus_id, (q_min, q_max) in pv_bus_reactive_limits.items():
+                if bus_id not in pv_targets:
+                    continue
+                q_required = float(injection.imag[index[bus_id]])
+                if q_required < q_min - tolerance:
+                    limit_violations.append((bus_id, q_min))
+                elif q_required > q_max + tolerance:
+                    limit_violations.append((bus_id, q_max))
+            if limit_violations:
+                for bus_id, q_limit in limit_violations:
+                    specified[index[bus_id]] = complex(specified[index[bus_id]].real, q_limit)
+                    del pv_targets[bus_id]
+                pv = np.array([index[bus_id] for bus_id in pv_targets], dtype=int)
+                if iteration < max_iterations:
+                    continue
+                break
             return _result(network, voltage, injection, iteration, maximum_mismatch)
         if iteration == max_iterations:
             break
@@ -191,7 +224,7 @@ def solve_load_flow(
             voltage[pq] = (magnitude[pq] + correction[non_slack.size :]) * np.exp(
                 1j * new_angle[np.searchsorted(non_slack, pq)]
             )
-        for bus_id, target_magnitude in pv_bus_voltage_magnitudes.items():
+        for bus_id, target_magnitude in pv_targets.items():
             pv_index = index[bus_id]
             voltage[pv_index] = target_magnitude * np.exp(1j * np.angle(voltage[pv_index]))
 

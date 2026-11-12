@@ -87,6 +87,21 @@ def test_load_flow_supports_pv_and_pq_buses_in_same_network():
     np.testing.assert_allclose(result.bus_power_injections[35], -0.4 - 0.15j, atol=1e-10)
 
 
+def test_pv_bus_changes_to_pq_when_reactive_limit_is_reached():
+    result = solve_load_flow(
+        _two_bus_network(),
+        slack_bus_id=10,
+        specified_power_injections={20: 0.5 + 0j},
+        pv_bus_voltage_magnitudes={20: 1.02},
+        pv_bus_reactive_limits={20: (-0.01, 0.01)},
+    )
+
+    assert result.maximum_mismatch <= 1e-10
+    np.testing.assert_allclose(result.bus_power_injections[20].real, 0.5, atol=1e-10)
+    np.testing.assert_allclose(result.bus_power_injections[20].imag, 0.01, atol=1e-10)
+    assert abs(result.bus_voltages[20]) != pytest.approx(1.02, abs=1e-8)
+
+
 def test_load_flow_rejects_unknown_slack_or_injection_buses():
     network = _two_bus_network()
     with pytest.raises(ValueError, match="Unknown slack"):
@@ -112,6 +127,16 @@ def test_load_flow_validates_pv_bus_data():
             slack_bus_id=10,
             specified_power_injections={20: 0.1 + 0.1j},
             pv_bus_voltage_magnitudes={20: 1.0},
+        )
+    with pytest.raises(ValueError, match="Reactive limits require PV"):
+        solve_load_flow(network, slack_bus_id=10, pv_bus_reactive_limits={20: (-1.0, 1.0)})
+    with pytest.raises(ValueError, match=r"finite \(Q_min, Q_max\)"):
+        solve_load_flow(
+            network,
+            slack_bus_id=10,
+            specified_power_injections={20: 0.1 + 0j},
+            pv_bus_voltage_magnitudes={20: 1.0},
+            pv_bus_reactive_limits={20: (1.0, -1.0)},
         )
 
 

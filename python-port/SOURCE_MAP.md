@@ -26,10 +26,11 @@ This map was prepared by inspecting the uploaded `elpleksource.zip` and the orig
 calculation over `build_ybus()`. It accepts net per-unit complex power
 injections for PQ buses, accepts active power and a fixed voltage magnitude for
 PV buses, fixes one slack bus voltage, and calculates slack power and PV
-reactive injections from the resulting voltages. Its Jacobian is the
-conventional polar-form P/Q Jacobian. The current model does not include
-reactive limits, generator voltage controls, or load-flow conversion of
-constant-power loads for short-circuit calculations. Focused unit tests are in
+reactive injections from the resulting voltages. Optional per-bus reactive
+limits switch a constrained PV bus to PQ at its limit. Its Jacobian is the
+conventional polar-form P/Q Jacobian. Individual generator capability curves,
+voltage controls, and load-flow conversion of constant-power loads for
+short-circuit calculations are not implemented. Focused unit tests are in
 `tests/test_load_flow.py`.
 
 ## Dynamic synchronous-generator path
@@ -106,8 +107,9 @@ they do not reconstruct from Elplek's exported phase currents.
 
 ## Next development stages
 
-1. Extend load flow with generator reactive limits and bus voltage controls,
-   first using analytically solved fixtures and then Elplek reference cases.
+1. Extend load flow with individual generator capability curves and bus voltage
+   controls, first using analytically solved fixtures and then Elplek reference
+   cases.
 2. Couple a converged prefault load-flow state to the dynamic fault model,
    especially for constant-power loads and multiple generators.
 3. Continue the IEC 60909 path against matching Elplek calculations, keeping its
@@ -119,8 +121,9 @@ they do not reconstruct from Elplek's exported phase currents.
 ## Important engineering distinction
 
 The Newton-Raphson load-flow implementation supports a fixed slack bus, PQ
-buses, and PV buses with fixed voltage magnitude and specified active power. It
-does not support generator reactive limits or bus controls. The wider package remains an
+buses, and PV buses with fixed voltage magnitude and specified active power.
+Optional bus-level reactive limits convert PV buses to PQ. It does not support
+generator capability curves or bus controls. The wider package remains an
 incremental port and is not a certified replacement for Elplek or a validated
 engineering study package. The test suite is run locally and in GitHub Actions;
 feature-specific comparisons against the original program are documented with

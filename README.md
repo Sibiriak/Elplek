@@ -97,9 +97,10 @@ solves a balanced positive-sequence AC load flow with one fixed-voltage slack
 bus, PQ buses, and PV buses with specified active power and voltage magnitude.
 Specify net complex power injections in per unit; loads use negative real and
 reactive power. The slack-bus power and PV reactive injections are calculated
-from the solved network. Generator reactive limits and controls are not
-implemented yet. This solver does not convert constant-power loads into
-impedances for short-circuit calculations.
+from the solved network. Optional per-bus reactive limits convert a PV bus to a
+PQ bus when its limit is reached. Individual generator capability curves and
+voltage controls are not implemented. This solver does not convert
+constant-power loads into impedances for short-circuit calculations.
 
 
 ### Nominal-pi line model
