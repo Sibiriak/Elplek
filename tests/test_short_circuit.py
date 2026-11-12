@@ -26,7 +26,7 @@ def test_two_bus_fault_includes_line_impedance():
     result = solve_short_circuit(network, 20)
     expected = 120 / ((0.2 + 0.6j) + (0.3 + 0.4j))
     np.testing.assert_allclose(result.fault_current, expected)
-    np.testing.assert_allclose(result.bus_voltages[20], 0j)
+    np.testing.assert_allclose(result.bus_voltages[20], 0j, atol=1e-12)
     np.testing.assert_allclose(result.source_currents["utility"], expected)
 
 
