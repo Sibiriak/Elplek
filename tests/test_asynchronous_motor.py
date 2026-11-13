@@ -53,6 +53,25 @@ def test_elplek_motor_equivalent_supports_part_load_and_is_finite() -> None:
     )
 
 
+def test_elplek_induction_generator_equivalent_matches_requested_active_power() -> None:
+    equivalent = solve_asynchronous_motor_equivalent(
+        nominal_voltage_ll=5_200.0,
+        nominal_power=5e6,
+        nominal_slip=0.018,
+        nominal_power_factor=0.8,
+        efficiency=0.94,
+        locked_rotor_current_ratio=5.0,
+        output_power=-2e6,
+    )
+
+    phase_voltage = 5_200.0 / 3**0.5
+    terminal_power = 3 * phase_voltage**2 / equivalent.impedance.conjugate()
+    assert equivalent.slip < 0
+    assert equivalent.load_resistance < 0
+    assert isclose(terminal_power.real, -2e6, rel_tol=1e-10)
+    assert terminal_power.imag > 0
+
+
 @pytest.mark.parametrize(
     "overrides",
     [

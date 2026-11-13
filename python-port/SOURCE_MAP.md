@@ -107,8 +107,8 @@ they do not reconstruct from Elplek's exported phase currents.
 
 ## Next development stages
 
-1. Extend asynchronous-machine support to induction-generator operation and
-   couple induction-machine states to the dynamic fault path.
+1. Couple asynchronous-machine states to the dynamic fault path, including
+   induction motors and induction generators.
 2. Extend load flow with individual generator capability curves and bus voltage
    controls, first using analytically solved fixtures and then Elplek reference
    cases.

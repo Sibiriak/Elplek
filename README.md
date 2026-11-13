@@ -104,12 +104,13 @@ constant-power loads into impedances for short-circuit calculations.
 
 ### Asynchronous-motor steady-state equivalent
 
-`solve_asynchronous_motor_equivalent(...)` ports Elplek's positive-power
-induction-motor equivalent calculation from its nameplate data. It returns the
-per-phase steady-state impedance in ohms, which can be converted to a shunt
+`solve_asynchronous_motor_equivalent(...)` ports Elplek's steady-state
+induction-machine equivalent calculation from its nameplate data. Positive
+output power models a motor; negative output power models an induction generator.
+It returns the per-phase impedance in ohms, which can be converted to a shunt
 admittance for load-flow modeling. The `Calpos Beispiel` reference case checks
-this calculation against saved Elplek terminal voltages and powers. Induction
-generators and dynamic induction-machine coupling are not implemented.
+the motor calculation against saved Elplek terminal voltages and powers.
+Dynamic induction-machine coupling is not implemented.
 
 
 ### Nominal-pi line model

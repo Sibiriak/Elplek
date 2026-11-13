@@ -19,9 +19,10 @@ validated for certified engineering use.
   implemented.
 - A single-machine dynamic fault path and synchronous-machine parameter
   conversion, checked against saved Elplek reference exports.
-- Elplek's steady-state asynchronous-motor equivalent impedance from motor
-  nameplate data. The reconstructed `Calpos Beispiel` load-flow case compares
-  these independently calculated equivalents with the saved terminal results.
+- Elplek's steady-state asynchronous-machine equivalent impedance from motor
+  nameplate data, including induction-generator operation at negative output
+  power. The reconstructed `Calpos Beispiel` load-flow case compares motor
+  equivalents with the saved terminal results.
 
 ## Development and validation
 
@@ -40,8 +41,8 @@ comparators and saved Elplek `.sld`/text exports are under
 
 This port does not yet implement individual generator capability curves,
 constant-power load coupling to short-circuit calculations, complete IEC
-60909 corrections, induction-generator operation, multiple-machine dynamic
-coupling, protection relays, or the original graphical interface. The
+60909 corrections, dynamic induction-machine coupling, multiple-machine
+dynamic coupling, protection relays, or the original graphical interface. The
 transformer zero-sequence and magnetizing-branch models remain simplified.
 Check the root README and `SOURCE_MAP.md` for feature-specific assumptions and
 validation coverage.
