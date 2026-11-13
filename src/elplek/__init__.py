@@ -18,6 +18,11 @@ from .dynamic_fault import (
 )
 from .mna import stamp_short_circuit, stamp_source
 from .model import Branch, Bus, Network, Shunt, Source, Transformer
+from .asynchronous_motor import (
+    AsynchronousMotorEquivalent,
+    AsynchronousMotorError,
+    solve_asynchronous_motor_equivalent,
+)
 from .load_flow import LoadFlowConvergenceError, LoadFlowResult, solve_load_flow
 from .short_circuit import ShortCircuitResult, solve_short_circuit
 from .sequence import SequenceFaultResult, solve_sequence_fault
@@ -47,6 +52,8 @@ from .ybus import build_sequence_ybus, build_ybus
 
 __all__ = [
     "RMIN",
+    "AsynchronousMotorEquivalent",
+    "AsynchronousMotorError",
     "Branch",
     "Bus",
     "DynamicFaultNetworkResult",
@@ -86,6 +93,7 @@ __all__ = [
     "sequence_to_phase_currents",
     "solve_short_circuit",
     "solve_load_flow",
+    "solve_asynchronous_motor_equivalent",
     "solve_sequence_fault",
     "solve_synchronous_machine_parameters",
     "advance_rotor_state_trapezoidal",

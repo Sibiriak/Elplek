@@ -61,8 +61,8 @@ Tap magnitude ratios are supported as ideal complex taps on the from_bus side.
 Their positive- and negative-sequence Y-bus stamps are included; zero-sequence
 tap treatment follows the simplified connection model. Magnetizing branches,
 complete vector-group/terminal conventions, full transformer grounding details,
-load-flow equivalence, and complete IEC 60909 corrections remain outside the
-current implementation.
+transformer magnetizing-current effects in load flow, and complete IEC 60909
+corrections remain outside the current implementation.
 The port is still under validation and should not yet be used as a certified
 replacement for the original program or an independently validated
 short-circuit study package.
@@ -101,6 +101,15 @@ from the solved network. Optional per-bus reactive limits convert a PV bus to a
 PQ bus when its limit is reached. Individual generator capability curves and
 voltage controls are not implemented. This solver does not convert
 constant-power loads into impedances for short-circuit calculations.
+
+### Asynchronous-motor steady-state equivalent
+
+`solve_asynchronous_motor_equivalent(...)` ports Elplek's positive-power
+induction-motor equivalent calculation from its nameplate data. It returns the
+per-phase steady-state impedance in ohms, which can be converted to a shunt
+admittance for load-flow modeling. The `Calpos Beispiel` reference case checks
+this calculation against saved Elplek terminal voltages and powers. Induction
+generators and dynamic induction-machine coupling are not implemented.
 
 
 ### Nominal-pi line model

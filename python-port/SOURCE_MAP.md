@@ -100,23 +100,25 @@ generator impedance Xd for both the initial fault network and later steps;
 the separately printed subtransient Thevenin values are not the impedance
 selected by that path. The prefault current is calculated from the explicit
 linear-admittance network when no precomputed load-flow state is supplied.
-Multiple-machine coupling, asynchronous motors, and constant-power prefault
-loads remain out of scope. The
+Multiple-machine coupling, asynchronous motors in the dynamic fault model, and
+constant-power prefault loads remain out of scope. The
 exported `I1`/`3I2` columns are not treated as symmetrical components because
 they do not reconstruct from Elplek's exported phase currents.
 
 ## Next development stages
 
-1. Extend load flow with individual generator capability curves and bus voltage
+1. Extend asynchronous-machine support to induction-generator operation and
+   couple induction-machine states to the dynamic fault path.
+2. Extend load flow with individual generator capability curves and bus voltage
    controls, first using analytically solved fixtures and then Elplek reference
    cases.
-2. Couple a converged prefault load-flow state to the dynamic fault model,
+3. Couple a converged prefault load-flow state to the dynamic fault model,
    especially for constant-power loads and multiple generators.
-3. Continue the IEC 60909 path against matching Elplek calculations, keeping its
+4. Continue the IEC 60909 path against matching Elplek calculations, keeping its
    correction factors and initial-condition conventions explicit.
-4. Add SLD import only after documenting its format and testing it against the
+5. Add SLD import only after documenting its format and testing it against the
    saved sample files.
-5. Rebuild the GUI after the numerical models and file format are stable.
+6. Rebuild the GUI after the numerical models and file format are stable.
 
 ## Important engineering distinction
 
